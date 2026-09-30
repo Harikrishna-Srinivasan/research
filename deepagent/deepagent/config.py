@@ -74,6 +74,7 @@ class ToolsConfig:
         default_factory=lambda: ["rm -rf /", "format c:", "del /s /q c:"]
     )
     web_search_enabled: bool = True
+    web_search_provider: str = "duckduckgo"
     max_command_timeout: int = 300
     custom_tools_dir: str = "./custom_tools"
 

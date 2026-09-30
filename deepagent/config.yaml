@@ -69,6 +69,8 @@ tools:
   blocked_patterns: ["rm -rf /", "format c:", "del /s /q c:", ":(){ :|:& };:"]
   # Enable web search tools
   web_search_enabled: true
+  # Web search provider: "duckduckgo" (default, free) or "tavily" (requires TAVILY_API_KEY)
+  web_search_provider: "duckduckgo"
   # Max seconds for a single shell command
   max_command_timeout: 240
   # Directory where dynamically created tools are stored

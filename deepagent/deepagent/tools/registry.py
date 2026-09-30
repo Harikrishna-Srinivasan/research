@@ -54,7 +54,7 @@ class ToolRegistry:
     def _register_builtins(self) -> None:
         from deepagent.tools.file_ops import FILE_TOOLS
         from deepagent.tools.shell import SHELL_TOOLS
-        from deepagent.tools.web import WEB_TOOLS
+        from deepagent.tools.web import WEB_TOOLS, SEARCH_PROVIDER_TOOLS
         from deepagent.tools.code_exec import CODE_EXEC_TOOLS
         from deepagent.tools.research import RESEARCH_TOOLS
 
@@ -66,6 +66,19 @@ class ToolRegistry:
                     parameters=t.get("parameters", {}),
                     function=t["function"],
                 )
+
+        # Register only the configured web search provider
+        provider = getattr(self.config.tools, "web_search_provider", "duckduckgo")
+        search_tool = SEARCH_PROVIDER_TOOLS.get(provider)
+        if search_tool:
+            self.register(
+                name=search_tool["name"],
+                description=search_tool["description"],
+                parameters=search_tool.get("parameters", {}),
+                function=search_tool["function"],
+            )
+        else:
+            log.warning("Unknown web_search_provider '%s'; no search tool registered.", provider)
 
     def _register_meta_tools(self) -> None:
         """Register special control-flow tools."""

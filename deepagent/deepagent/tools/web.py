@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 from typing import Optional
 
@@ -21,6 +22,34 @@ def web_search(query: str, max_results: int = 8) -> str:
         return f"No results found for '{query}'"
     except ImportError:
         return "ERROR: duckduckgo-search not installed. Run: pip install duckduckgo-search"
+    except Exception as e:
+        return f"ERROR searching: {e}"
+
+
+def tavily_web_search(query: str, max_results: int = 8) -> str:
+    """Search the web using Tavily (requires TAVILY_API_KEY env var)."""
+    try:
+        from tavily import TavilyClient
+
+        api_key = os.environ.get("TAVILY_API_KEY")
+        if not api_key:
+            return "ERROR: TAVILY_API_KEY environment variable is not set."
+
+        client = TavilyClient(api_key=api_key)
+        response = client.search(query=query, max_results=max_results)
+
+        results = []
+        for r in response.get("results", []):
+            title = r.get("title", "")
+            url = r.get("url", "")
+            content = r.get("content", "")
+            results.append(f"**{title}**\n{url}\n{content}\n")
+
+        if results:
+            return f"Search results for '{query}':\n\n" + "\n---\n".join(results)
+        return f"No results found for '{query}'"
+    except ImportError:
+        return "ERROR: tavily-python not installed. Run: pip install tavily-python"
     except Exception as e:
         return f"ERROR searching: {e}"
 
@@ -80,8 +109,9 @@ def read_github_repo(owner: str, repo: str, path: str = "") -> str:
         return f"ERROR reading GitHub repo: {e}"
 
 
-WEB_TOOLS = [
-    {
+# Search provider tools keyed by provider name used in config.tools.web_search_provider
+SEARCH_PROVIDER_TOOLS: dict[str, dict] = {
+    "duckduckgo": {
         "name": "web_search",
         "description": "Search the web using DuckDuckGo. Returns titles, URLs, and snippets.",
         "parameters": {
@@ -90,6 +120,19 @@ WEB_TOOLS = [
         },
         "function": web_search,
     },
+    "tavily": {
+        "name": "tavily_web_search",
+        "description": "Search the web using Tavily. Returns titles, URLs, and snippets. Requires TAVILY_API_KEY.",
+        "parameters": {
+            "query": {"type": "string", "description": "Search query"},
+            "max_results": {"type": "integer", "description": "Max results", "default": 8},
+        },
+        "function": tavily_web_search,
+    },
+}
+
+# Non-search web tools (always registered)
+WEB_TOOLS = [
     {
         "name": "read_webpage",
         "description": "Fetch and extract text content from a URL as markdown.",
